@@ -131,7 +131,8 @@ def plot_selected_vars(results, target, sign_sources=True,
 
     fig = plt.figure()
     nx.draw(graph, pos=pos, with_labels=True, font_weight='bold',
-            node_size=900, alpha=0.7, node_shape='s', node_color=color)
+            node_size=900, alpha=0.7, node_shape='s', node_color=color,
+            hold=True)
     # Optionally display edge labels showing the TE value
     if display_edge_labels:
         edge_labels = nx.get_edge_attributes(graph, 'te')
@@ -150,7 +151,7 @@ def _plot_graph(graph, axis, weights=None, display_edge_labels=True):
     """Plot graph using networkx."""
     pos = nx.circular_layout(graph)
     nx.draw_circular(graph, with_labels=True, node_size=600, alpha=1.0,
-                     ax=axis, node_color='Gainsboro', font_size=14,
+                     ax=axis, node_color='Gainsboro', hold=True, font_size=14,
                      font_weight='bold')
     if display_edge_labels:
         edge_labels = nx.get_edge_attributes(graph, weights)
@@ -238,7 +239,7 @@ def plot_mute_graph():
     fig = plt.figure()
     nx.draw(graph, pos=pos, with_labels=True, node_size=900, alpha=1.0,
             node_color='cadetblue', font_weight='bold',
-            edge_color=['r', 'k', 'r', 'k', 'k'])
+            edge_color=['r', 'k', 'r', 'k', 'k'], hold=True)
     nx.draw_networkx_edge_labels(graph, pos=pos)
     plt.text(2, 0.1, 'non-linear interaction in red')
     # see here for an example on how to plot edge labels:
