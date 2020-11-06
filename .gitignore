@@ -49,3 +49,4 @@ test/output/.gitkeep
 # Files the test for BrainNet Viewer export writes
 test/data/*.edge
 test/data/*.node
+.history/
