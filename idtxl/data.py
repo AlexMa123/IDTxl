@@ -1,8 +1,33 @@
 """Provide data structures for IDTxl analysis."""
 import numpy as np
 from . import idtxl_utils as utils
+try:
+    from mkl_fft import rfft_numpy as rfft
+    from mkl_fft import irfft_numpy as irfft
+except ImportError:
+    from numpy.fft import rfft, irfft
 
 VERBOSE = False
+
+
+def surrogate_RP(timeseries):
+    fft_result = rfft(timeseries)
+    random_phase = np.random.uniform(0, 2 * np.pi, fft_result.size - 1)
+    fft_result[1:] = fft_result[1:] * np.exp(1j * random_phase)
+    surrogate_data = irfft(fft_result, n=timeseries.size)
+    return surrogate_data
+
+
+def surrogate_AAFT(timeseries):
+    gaussian = np.random.randn(timeseries.size)
+    index_g = gaussian.argsort()
+    index_t = timeseries.argsort()
+    copy_ts = timeseries.copy()
+    copy_ts[index_t] = gaussian[index_g]
+
+    rp_ts = surrogate_RP(copy_ts)
+    rp_ts[rp_ts.argsort()] = timeseries[index_t]
+    return rp_ts
 
 
 class Data():
@@ -62,7 +87,6 @@ class Data():
             if true, all data gets z-standardised per process
 
     """
-
     def __init__(self, data=None, dim_order='psr', normalise=True):
         self.normalise = normalise
         if data is not None:
@@ -99,7 +123,7 @@ class Data():
                 raise RuntimeError('The sample index of the current value '
                                    '({0}) is larger than the number of samples'
                                    ' in the data set ({1}).'.format(
-                                              current_value, self.n_samples))
+                                       current_value, self.n_samples))
             return self.n_samples - current_value[1]
 
     def n_realisations_repl(self):
@@ -122,7 +146,7 @@ class Data():
     @data.deleter
     def data(self):
         print('overwriting existing data')
-        del(self._data)
+        del (self._data)
 
     def set_data(self, data, dim_order):
         """Overwrite data in an existing Data object.
@@ -141,7 +165,7 @@ class Data():
         if len(dim_order) != data.ndim:
             raise RuntimeError('Data array dimension ({0}) and length of '
                                'dim_order ({1}) are not equal.'.format(
-                                           data.ndim, len(dim_order)))
+                                   data.ndim, len(dim_order)))
 
         # Bring data into the order processes x samples x replications and set
         # set data.
@@ -164,9 +188,9 @@ class Data():
         """Z-standardise data separately for each process."""
         d_standardised = np.empty(d.shape)
         for process in range(self.n_processes):
-            s = utils.standardise(
-                            d[process, :, :].reshape(1, self.n_realisations()),
-                            dimension=1)
+            s = utils.standardise(d[process, :, :].reshape(
+                1, self.n_realisations()),
+                                  dimension=1)
             d_standardised[process, :, :] = s.reshape(self.n_samples,
                                                       self.n_replications)
         return d_standardised
@@ -244,16 +268,16 @@ class Data():
             return None, None
         # Check if requested indices are smaller than the current_value.
         if not all(np.array([x[1] for x in idx_list]) <= current_value[1]):
-            print('Index list: {0}\ncurrent value: {1}'.format(idx_list,
-                                                               current_value))
+            print('Index list: {0}\ncurrent value: {1}'.format(
+                idx_list, current_value))
             raise RuntimeError('All indices for which data is retrieved must '
                                ' be smaller than the current value.')
 
         # Allocate memory.
         n_real_time = self.n_realisations_samples(current_value)
         n_real_repl = self.n_realisations_repl()
-        realisations = np.empty((n_real_time * n_real_repl,
-                                 len(idx_list))).astype(self.data_type)
+        realisations = np.empty(
+            (n_real_time * n_real_repl, len(idx_list))).astype(self.data_type)
 
         # Shuffle the replication order if requested. This creates surrogate
         # data by permuting replications while keeping the order of samples
@@ -270,14 +294,13 @@ class Data():
             # get the last sample as negative value, i.e., no. samples from the
             # end of the array
             last_sample = idx[1] - current_value[1]  # indexing is much faster
-            if last_sample == 0:                     # than looping over time!
+            if last_sample == 0:  # than looping over time!
                 last_sample = None
             for replication in replications_order:
                 try:
-                    realisations[r:r + n_real_time, i] = self.data[
-                                                        idx[0],
-                                                        idx[1]: last_sample,
-                                                        replication]
+                    realisations[r:r + n_real_time,
+                                 i] = self.data[idx[0], idx[1]:last_sample,
+                                                replication]
                 except IndexError:
                     raise IndexError('You tried to access variable {0} in a '
                                      'data set with {1} processes and {2} '
@@ -285,15 +308,16 @@ class Data():
                                                        self.n_samples))
                 r += n_real_time
 
-            assert(not np.isnan(realisations[:, i]).any()), ('There are nans '
-                                                             'in the retrieved'
-                                                             ' realisations.')
+            assert (not np.isnan(realisations[:,
+                                              i]).any()), ('There are nans '
+                                                           'in the retrieved'
+                                                           ' realisations.')
             i += 1
 
         # For each realisation keep the index of the replication it came from.
         replications_index = np.repeat(replications_order, n_real_time)
-        assert(replications_index.shape[0] == realisations.shape[0]), (
-               'There seems to be a problem with the replications index.')
+        assert (replications_index.shape[0] == realisations.shape[0]), (
+            'There seems to be a problem with the replications index.')
 
         return realisations, replications_index
 
@@ -362,8 +386,8 @@ class Data():
                              'samples.'.format(process, offset_samples,
                                                self.n_processes,
                                                self.n_samples))
-        assert(not np.isnan(data_slice).any()), ('There are nans in the '
-                                                 'retrieved data slice.')
+        assert (not np.isnan(data_slice).any()), ('There are nans in the '
+                                                  'retrieved data slice.')
         return data_slice.T, replication_index
 
     def slice_permute_replications(self, process):
@@ -558,7 +582,6 @@ class Data():
             +--------------+-----------------+-----------------+-----------------+-----+
             | sample index | 5 6 7 8 1 2 3 4 | 5 6 7 8 1 2 3 4 | 5 6 7 8 1 2 3 4 | ... |
             +--------------+-----------------+-----------------+-----------------+-----+
-
         Permute blocks of 3 samples:
             +--------------+-----------------+-----------------+-----------------+-----+
             | repl. ind.   | 1 1 1 1 1 1 1 1 | 2 2 2 2 2 2 2 2 | 3 3 3 3 3 3 3 3 | ... |
@@ -636,8 +659,8 @@ class Data():
             replications is too small to generate the requested number of
             permutations.
         """
-        [realisations, replication_idx] = self.get_realisations(current_value,
-                                                                idx_list)
+        [realisations,
+         replication_idx] = self.get_realisations(current_value, idx_list)
         n_samples = sum(replication_idx == 0)
         perm = self._get_permutation_samples(n_samples, perm_settings)
         # Apply the permutation to data from each replication.
@@ -649,6 +672,29 @@ class Data():
             realisations_perm[mask, :] = data_temp[perm, :]
             perm_idx[mask] = perm
         return realisations_perm, perm_idx
+
+    def Fourier_surrogate(self, current_value, idx_list, perm_settings):
+        perm_type = perm_settings['perm_type']
+        if perm_type == "RP" or "AAFT":
+            pass
+        else:
+            raise RuntimeError(
+                'there is no such perm_type, it should be RP or AAFT')
+
+        [realisations,
+         replication_idx] = self.get_realisations(current_value, idx_list)
+
+        realisations_surr = np.empty(realisations.shape).astype(self.data_type)
+        for r in range(max(replication_idx) + 1):
+            mask = replication_idx == r
+            data_temp = realisations[mask, :]
+            for i in range(realisations_surr.shape[1]):
+                if perm_type == "RP":
+                    realisations_surr[mask, i] = surrogate_RP(data_temp[:, i])
+                elif perm_type == "AAFT":
+                    realisations_surr[mask, i] = surrogate_AAFT(data_temp[:,
+                                                                          i])
+        return realisations_surr, None
 
     def _get_permutation_samples(self, n_samples, perm_settings):
         """Generate permutation of n samples.
@@ -683,27 +729,27 @@ class Data():
         elif perm_type == 'circular':
             max_shift = perm_settings['max_shift']
             if type(max_shift) is not int or max_shift < 1:
-                raise TypeError(' ''max_shift'' has to be an int > 0.')
+                raise TypeError(' ' 'max_shift' ' has to be an int > 0.')
             perm = self._circular_shift(n_samples, max_shift)[0]
 
         elif perm_type == 'block':
             block_size = perm_settings['block_size']
             perm_range = perm_settings['perm_range']
             if type(block_size) is not int or block_size < 1:
-                raise TypeError(' ''block_size'' has to be an int > 0.')
+                raise TypeError(' ' 'block_size' ' has to be an int > 0.')
             if type(perm_range) is not int or perm_range < 1:
-                raise TypeError(' ''perm_range'' has to be an int > 0.')
+                raise TypeError(' ' 'perm_range' ' has to be an int > 0.')
             perm = self._swap_blocks(n_samples, block_size, perm_range)
 
         elif perm_type == 'local':
             perm_range = perm_settings['perm_range']
             if type(perm_range) is not int or perm_range < 1:
-                raise TypeError(' ''perm_range'' has to be an int > 0.')
+                raise TypeError(' ' 'perm_range' ' has to be an int > 0.')
             perm = self._swap_local(n_samples, perm_range)
 
         else:
-            raise ValueError('Unknown permutation type ({0}).'.format(
-                                                                    perm_type))
+            raise ValueError(
+                'Unknown permutation type ({0}).'.format(perm_type))
         return perm
 
     def _swap_local(self, n, perm_range):
@@ -723,8 +769,8 @@ class Data():
                                   'otherwise there is nothing to permute.')
         assert (n >= perm_range), ('Not enough realisations per replication '
                                    '({0}) to allow for the requested '
-                                   '"perm_range" of {1}.' .format(n,
-                                                                  perm_range))
+                                   '"perm_range" of {1}.'.format(
+                                       n, perm_range))
 
         if perm_range == n:  # permute all n samples randomly
             perm = np.random.permutation(n)
@@ -770,17 +816,18 @@ class Data():
 
             i = 0
             for p in range(n_blocks // perm_range):
-                perm_blocks[i:i + perm_range] = np.random.permutation(
-                                                                perm_range) + i
+                perm_blocks[i:i +
+                            perm_range] = np.random.permutation(perm_range) + i
                 i += perm_range
             if rem_blocks > 0:
                 perm_blocks[-rem_blocks:] = np.random.permutation(
-                                                                rem_blocks) + i
+                    rem_blocks) + i
 
         # Get the block index for each sample index, take into account that the
         # last block may have fewer samples if n_samples % block_size isn't 0.
-        idx_blocks = np.hstack((np.repeat(np.arange(n_blocks - 1), block_size),
-                                np.repeat(n_blocks - 1, rem_samples)))
+        idx_blocks = np.hstack(
+            (np.repeat(np.arange(n_blocks - 1),
+                       block_size), np.repeat(n_blocks - 1, rem_samples)))
 
         # Permute samples indices according to permuted block indices.
         perm = np.zeros(n).astype(int)  # allocate memory
@@ -820,8 +867,8 @@ class Data():
         shift = np.random.randint(low=1, high=max_shift + 1)
         if VERBOSE:
             print("replications are shifted by {0} samples".format(shift))
-        return np.hstack((np.arange(n - shift, n),
-                          np.arange(n - shift))), shift
+        return np.hstack((np.arange(n - shift,
+                                    n), np.arange(n - shift))), shift
 
     def generate_mute_data(self, n_samples=1000, n_replications=10):
         """Generate example data for a 5-process network.
@@ -858,10 +905,8 @@ class Data():
         n_samples = n_samples
         n_replications = n_replications
 
-        x = np.zeros((n_processes, n_samples + 3,
-                      n_replications))
-        x[:, 0:3, :] = np.random.normal(size=(n_processes, 3,
-                                              n_replications))
+        x = np.zeros((n_processes, n_samples + 3, n_replications))
+        x[:, 0:3, :] = np.random.normal(size=(n_processes, 3, n_replications))
         term_1 = 0.95 * np.sqrt(2)
         term_2 = 0.25 * np.sqrt(2)
         term_3 = -0.25 * np.sqrt(2)
@@ -869,24 +914,21 @@ class Data():
             for n in range(3, n_samples + 3):
                 x[0, n, r] = (term_1 * x[0, n - 1, r] -
                               0.9025 * x[0, n - 2, r] + np.random.normal())
-                x[1, n, r] = 0.5 * x[0, n - 2, r] ** 2 + np.random.normal()
+                x[1, n, r] = 0.5 * x[0, n - 2, r]**2 + np.random.normal()
                 x[2, n, r] = -0.4 * x[0, n - 3, r] + np.random.normal()
-                x[3, n, r] = (-0.5 * x[0, n - 2, r] ** 2 +
-                              term_2 * x[3, n - 1, r] +
-                              term_2 * x[4, n - 1, r] +
-                              np.random.normal())
+                x[3, n,
+                  r] = (-0.5 * x[0, n - 2, r]**2 + term_2 * x[3, n - 1, r] +
+                        term_2 * x[4, n - 1, r] + np.random.normal())
                 x[4, n, r] = (term_3 * x[3, n - 1, r] +
-                              term_2 * x[4, n - 1, r] +
-                              np.random.normal())
+                              term_2 * x[4, n - 1, r] + np.random.normal())
         self.set_data(x[:, 3:, :], 'psr')
 
-    def generate_var_data(
-        self,
-        n_samples=1000,
-        n_replications=10,
-        coefficient_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
-        noise_std=0.1
-    ):
+    def generate_var_data(self,
+                          n_samples=1000,
+                          n_replications=10,
+                          coefficient_matrices=np.array([[[0.5, 0], [0.4,
+                                                                     0.5]]]),
+                          noise_std=0.1):
         """Generate discrete-time VAR (vector autoregressive) time series.
 
         Generate data and overwrite the instance's current data.
@@ -913,17 +955,12 @@ class Data():
 
         # Check stability of the VAR process, which is a sufficient condition
         # for stationarity.
-        var_reduced_form = np.zeros((
-            n_processes * order,
-            n_processes * order
-        ))
+        var_reduced_form = np.zeros((n_processes * order, n_processes * order))
         var_reduced_form[0:n_processes, :] = np.reshape(
             np.transpose(coefficient_matrices, (1, 0, 2)),
-            [n_processes, n_processes * order]
-            )
+            [n_processes, n_processes * order])
         var_reduced_form[n_processes:, 0:n_processes * (order - 1)] = np.eye(
-            n_processes * (order - 1)
-        )
+            n_processes * (order - 1))
         # Condition for stability: the absolute values of all the eigenvalues
         # of the reduced-form coefficeint matrix are smaller than 1. A stable
         # VAR process is also stationary.
@@ -934,45 +971,40 @@ class Data():
         # Initialise time series matrix. The 3 dimensions represent
         # (processes, samples, replications). Only the last n_samples will be
         # kept, in order to discard transient effects.
-        x = np.zeros((
-            n_processes,
-            order + samples_transient + n_samples,
-            n_replications
-        ))
+        x = np.zeros((n_processes, order + samples_transient + n_samples,
+                      n_replications))
 
         # Generate (different) initial conditions for each replication:
         # Uniformly sample from the [0,1] interval and tile as many times as
         # the VAR process order along the second dimension.
-        x[:, 0:order, :] = np.tile(
-            np.random.rand(n_processes, 1, n_replications),
-            (1, order, 1)
-        )
+        x[:,
+          0:order, :] = np.tile(np.random.rand(n_processes, 1, n_replications),
+                                (1, order, 1))
 
         # Compute time series
         for i_repl in range(0, n_replications):
-            for i_sample in range(order, order + samples_transient + n_samples):
+            for i_sample in range(order,
+                                  order + samples_transient + n_samples):
                 for i_delay in range(1, order + 1):
                     x[:, i_sample, i_repl] += np.dot(
                         coefficient_matrices[i_delay - 1, :, :],
-                        x[:, i_sample - i_delay, i_repl]
-                    )
+                        x[:, i_sample - i_delay, i_repl])
                 # Add uncorrelated Gaussian noise vector
                 x[:, i_sample, i_repl] += np.random.normal(
                     0,  # mean
                     noise_std,
-                    x[:, i_sample, i_repl].shape
-                )
+                    x[:, i_sample, i_repl].shape)
 
         # Discard transient effects (only take end of time series)
         self.set_data(x[:, -(n_samples + 1):-1, :], 'psr')
 
-    def generate_logistic_maps_data(
-        self,
-        n_samples=1000,
-        n_replications=10,
-        coefficient_matrices=np.array([[[0.5, 0], [0.4, 0.5]]]),
-        noise_std=0.1
-    ):
+    def generate_logistic_maps_data(self,
+                                    n_samples=1000,
+                                    n_replications=10,
+                                    coefficient_matrices=np.array([[[0.5, 0],
+                                                                    [0.4,
+                                                                     0.5]]]),
+                                    noise_std=0.1):
         """Generate discrete-time coupled-logistic-maps time series.
 
         Generate data and overwrite the instance's current data.
@@ -1006,36 +1038,31 @@ class Data():
         # Initialise time series matrix. The 3 dimensions represent
         # (processes, samples, replications). Only the last n_samples will be
         # kept, in order to discard transient effects.
-        x = np.zeros((
-            n_processes,
-            order + samples_transient + n_samples,
-            n_replications
-        ))
+        x = np.zeros((n_processes, order + samples_transient + n_samples,
+                      n_replications))
 
         # Generate (different) initial conditions for each replication:
         # Uniformly sample from the [0,1] interval and tile as many times as
         # the stochastic process order along the second dimension.
-        x[:, 0:order, :] = np.tile(
-            np.random.rand(n_processes, 1, n_replications),
-            (1, order, 1)
-        )
+        x[:,
+          0:order, :] = np.tile(np.random.rand(n_processes, 1, n_replications),
+                                (1, order, 1))
 
         # Compute time series
         for i_repl in range(0, n_replications):
-            for i_sample in range(order, order + samples_transient + n_samples):
+            for i_sample in range(order,
+                                  order + samples_transient + n_samples):
                 for i_delay in range(1, order + 1):
                     x[:, i_sample, i_repl] += np.dot(
                         coefficient_matrices[i_delay - 1, :, :],
-                        x[:, i_sample - i_delay, i_repl]
-                    )
+                        x[:, i_sample - i_delay, i_repl])
                 # Compute activation function
                 x[:, i_sample, i_repl] = f(x[:, i_sample, i_repl])
                 # Add uncorrelated Gaussian noise vector
                 x[:, i_sample, i_repl] += np.random.normal(
                     0,  # mean
                     noise_std,
-                    x[:, i_sample, i_repl].shape
-                )
+                    x[:, i_sample, i_repl].shape)
                 # ensure values are in the [0, 1] range
                 x[:, i_sample, i_repl] = x[:, i_sample, i_repl] % 1
 
