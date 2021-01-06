@@ -675,7 +675,7 @@ class Data():
 
     def Fourier_surrogate(self, current_value, idx_list, perm_settings):
         perm_type = perm_settings['perm_type']
-        if perm_type == "RP" or "AAFT":
+        if perm_type == "RP" or perm_type == "AAFT":
             pass
         else:
             raise RuntimeError(
