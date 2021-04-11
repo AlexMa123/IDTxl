@@ -61,8 +61,8 @@ class AdjacencyMatrix():
         self._weight_matrix = np.zeros((n_nodes, n_nodes), dtype=weight_type)
         if np.issubdtype(weight_type, np.integer):
             self._weight_type = np.integer
-        elif np.issubdtype(weight_type, np.float):
-            self._weight_type = np.float
+        elif np.issubdtype(weight_type, np.floating):
+            self._weight_type = np.floating
         elif weight_type is bool:
             self._weight_type = weight_type
         else:
@@ -238,7 +238,6 @@ class Results():
                             'Did not find any method attributes to combine '
                             '(.single_proces or ._single_target).')
                 self._add_single_result(p, results_to_add, r.settings)
-
 
 class ResultsSingleProcessAnalysis(Results):
     """Store results of single process analysis.

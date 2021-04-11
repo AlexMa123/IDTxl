@@ -30,11 +30,12 @@ P. Wollstadt, J. T. Lizier, R. Vicente, C. Finn, M. Martinez-Zarzuela, P. Median
 - [Michael Wibral](http://www.uni-goettingen.de/de/datengetriebene+analyse+biologischer+netzwerke+%28wibral%29/603144.html), Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
 - [Joseph T. Lizier](http://lizier.me/joseph/), Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - [Raul Vicente](http://neuro.cs.ut.ee/people/), Computational Neuroscience Lab, Institute of Computer Science, University of Tartu, Tartu, Estonia
-- [Abdullah Makkeh](https://abzinger.github.io/) Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
+- [Abdullah Makkeh](https://abzinger.github.io/), Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
 - Conor Finn, Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - Mario Martinez-Zarzuela, Department of Signal Theory and Communications and Telematics Engineering, University of Valladolid, Valladolid, Spain
 - Leonardo Novelli, Centre for Complex Systems, The University of Sydney, Sydney, Australia
 - [Pedro Mediano](https://www.doc.ic.ac.uk/~pam213/), Computational Neurodynamics Group, Imperial College London, London, United Kingdom
+- Michael Lindner, Campus Institute for Dynamics of Biological Networks, Georg August University, Göttingen, Germany
 
 **How to contribute?** We are happy about any feedback on IDTxl. If you would like to contribute, please open an issue or send a pull request with your feature or improvement. Also have a look at the [developer's section](https://github.com/pwollstadt/IDTxl/wiki#developers-section) in the Wiki for details.
 

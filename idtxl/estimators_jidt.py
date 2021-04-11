@@ -87,7 +87,8 @@ class JidtEstimator(Estimator):
         assert settings['tau_source'] >= 1, 'Source tau must be >= 1'
         assert settings['history_target'] >= 0, 'Target history must be >= 0'
         assert settings['history_source'] >= 1, 'Source history must be >= 1'
-        assert settings['source_target_delay'] >= 0, 'Source-target delay must be >= 0'
+        assert settings['source_target_delay'] >= 0, (
+            'Source-target delay must be >= 0')
         return settings
 
     def is_parallel(self):
@@ -304,6 +305,8 @@ class JidtGaussian(JidtEstimator):
     Set common estimation parameters for JIDT Kraskov-estimators. For usage of
     these estimators see documentation for the child classes.
 
+    Results are returned in nats.
+
     Args:
         CalcClass : JAVA class
             JAVA class returned by jpype.JPackage
@@ -375,6 +378,8 @@ class JidtKraskovCMI(JidtKraskov):
     Call JIDT via jpype and use the Kraskov 1 estimator. If no conditional is
     given (is None), the function returns the mutual information between var1
     and var2. See parent class for references.
+
+     Results are returned in nats.
 
     Args:
         settings : dict [optional]
@@ -478,6 +483,8 @@ class JidtDiscreteCMI(JidtDiscrete):
     Calculate the conditional mutual information between two variables given
     the third. Call JIDT via jpype and use the discrete estimator. See parent
     class for references.
+
+    Results are returned in bits.
 
     Args:
         settings : dict [optional]
@@ -660,6 +667,8 @@ class JidtDiscreteMI(JidtDiscrete):
     Calculate the mutual information (MI) between two variables. Call JIDT via
     jpype and use the discrete estimator. See parent class for references.
 
+    Results are returned in bits.
+
     Args:
         settings : dict [optional]
             sets estimation parameters:
@@ -812,6 +821,8 @@ class JidtKraskovMI(JidtKraskov):
     Calculate the mutual information between two variables. Call JIDT via jpype
     and use the Kraskov 1 estimator. See parent class for references.
 
+    Results are returned in nats.
+
     Args:
         settings : dict [optional]
             sets estimation parameters:
@@ -913,7 +924,7 @@ class JidtKraskovAIS(JidtKraskov):
     tau describes the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
 
     Args:
         settings : dict
@@ -996,6 +1007,8 @@ class JidtDiscreteAIS(JidtDiscrete):
 
     Calculate the active information storage (AIS) for one process. Call JIDT
     via jpype and use the discrete estimator. See parent class for references.
+
+    Results are returned in bits.
 
     Args:
         settings : dict
@@ -1154,7 +1167,7 @@ class JidtGaussianAIS(JidtGaussian):
     tau describes the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references.Results are returned in nats.
 
     Args:
         settings : dict
@@ -1223,6 +1236,8 @@ class JidtGaussianMI(JidtGaussian):
 
     Calculate the mutual information between two variables. Call JIDT via jpype
     and use the Gaussian estimator. See parent class for references.
+
+    Results are returned in nats.
 
     Args:
         settings : dict [optional]
@@ -1300,7 +1315,8 @@ class JidtGaussianCMI(JidtGaussian):
     If no conditional is given (is None), the function returns the mutual
     information between var1 and var2.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
+
 
     Args:
         settings : dict [optional]
@@ -1417,7 +1433,7 @@ class JidtKraskovTE(JidtKraskov):
     tau descrices the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
 
     Args:
         settings : dict
@@ -1503,6 +1519,8 @@ class JidtDiscreteTE(JidtDiscrete):
     state and the target's current value, conditional on the target's past.
     See parent class for references.
 
+    Results are returned in bits.
+
     Args:
         settings : dict
             sets estimation parameters:
@@ -1556,8 +1574,10 @@ class JidtDiscreteTE(JidtDiscrete):
             'Num discrete levels for source has to be an integer.')
         assert type(settings['alph2']) is int, (
             'Num discrete levels for target has to be an integer.')
-        assert settings['alph1'] >= 2, 'Num discrete levels for source must be >= 2'
-        assert settings['alph2'] >= 2, 'Num discrete levels for target must be >= 2'
+        assert settings['alph1'] >= 2, (
+            'Num discrete levels for source must be >= 2')
+        assert settings['alph2'] >= 2, (
+            'Num discrete levels for target must be >= 2')
         super().__init__(settings)
 
         # Start JAVA virtual machine and create JAVA object.
@@ -1677,7 +1697,7 @@ class JidtGaussianTE(JidtGaussian):
     tau descrices the embedding delay, i.e., the spacing between every two
     samples from the processes' past.
 
-    See parent class for references.
+    See parent class for references. Results are returned in nats.
 
     Args:
         settings : dict

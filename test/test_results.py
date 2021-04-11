@@ -141,7 +141,7 @@ def test_results_network_inference():
 
 def test_pickle_results():
     """Test pickling results objects."""
-    data = _generate_gauss_data()
+    data = _get_discrete_gauss_data()
     nw = MultivariateTE()
     res_single = nw.analyse_single_target(
         settings=settings, data=data, target=1)
@@ -154,7 +154,7 @@ def test_pickle_results():
 
 def test_combine_results():
     """Test combination of results objects."""
-    data = _generate_gauss_data()
+    data = _get_discrete_gauss_data()
     nw = MultivariateTE()
     res_network_1 = nw.analyse_network(settings=settings, data=data)
 
@@ -167,7 +167,7 @@ def test_combine_results():
 
 def test_add_single_result():
     """Test adding results for a single target/process."""
-    data = _generate_gauss_data()
+    data = _get_discrete_gauss_data()
     nw = MultivariateTE()
     res_network = nw.analyse_single_target(
         settings=settings, data=data, target=1)
@@ -265,8 +265,9 @@ def test_delay_reconstruction():
             'Actual results: {2}.'.format(target, expected_mi, est_mi))
 
 
-def _generate_gauss_data(covariance=0.4, n=10000, delay=1, normalise=False):
+def _get_discrete_gauss_data(covariance=0.4, n=10000, delay=1, normalise=False, seed=None):
     # Generate two coupled Gaussian time series
+    np.random.seed(seed)
     source = np.random.normal(0, 1, size=n)
     target = (covariance * source + (1 - covariance) *
               np.random.normal(0, 1, size=n))
@@ -411,14 +412,14 @@ def test_adjacency_matrix():
     # Test comparison of entry types
     a = AdjacencyMatrix(n_nodes, weight_type=bool)
     a.add_edge(0, 1, True)
+    a = AdjacencyMatrix(n_nodes, weight_type=int)
     for t in [int, np.int, np.int32, np.int64]:
-        a = AdjacencyMatrix(n_nodes, weight_type=t)
         a.add_edge(0, 1, int(1))
         a.add_edge(0, 1, np.int(1))
         a.add_edge(0, 1, np.int32(1))
         a.add_edge(0, 1, np.int64(1))
+    a = AdjacencyMatrix(n_nodes, weight_type=float)
     for t in [float, np.float, np.float32, np.float64]:
-        a = AdjacencyMatrix(n_nodes, weight_type=t)
         a.add_edge(0, 1, float(1))
         a.add_edge(0, 1, np.float(1))
         a.add_edge(0, 1, np.float32(1))
